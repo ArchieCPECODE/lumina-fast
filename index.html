@@ -3,231 +3,554 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lumina Fast - Intermittent Fasting Tracker</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Lumina Fast">
-    <link rel="apple-touch-icon" href="https://via.placeholder.com/192/000000/FFFFFF/?text=LF">
-    
-    <title>Lumina Fast - 16:8 Tracker</title>
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231e293b%22/><text y=%22.9em%22 font-size=%2280%22 x=%2210%22>🥗</text></svg>">
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        .toggle-checkbox:checked {
-            right: 0;
-            border-color: #68D391;
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            900: '#14532d',
+                        },
+                        fasting: '#3b82f6', // Blue for fasting
+                        eating: '#f59e0b',  // Amber for eating
+                    }
+                }
+            }
         }
-        .toggle-checkbox:checked + .toggle-label {
-            background-color: #68D391;
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            /* Mobile app feel */
+            -webkit-tap-highlight-color: transparent;
+            /* Prevent pull-to-refresh on mobile */
+            overscroll-behavior-y: contain; 
+        }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Circular Progress Bar Styles */
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        /* Toast Animation */
+        @keyframes slideInUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes slideOutDown {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(100%); opacity: 0; }
+        }
+        
+        .toast-enter {
+            animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .toast-exit {
+            animation: slideOutDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Hide scrollbar for clean app look */
+        ::-webkit-scrollbar {
+            display: none;
         }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 pb-10">
+<body class="text-slate-800 antialiased h-screen flex justify-center items-center overflow-hidden">
 
-    <header class="bg-green-600 text-white p-4 shadow-md text-center">
-        <h1 class="text-2xl font-bold tracking-wide">Lumina Fast</h1>
-        <p class="text-sm opacity-80">Budget-Friendly 16:8 Fasting</p>
-    </header>
-
-    <main class="max-w-md mx-auto p-4 space-y-6">
-
-        <section class="bg-white p-6 rounded-xl shadow-sm text-center">
-            <h2 class="text-lg font-semibold text-gray-500 uppercase tracking-wider mb-2">Current Status</h2>
-            <div id="statusDisplay" class="text-3xl font-bold text-green-600 mb-2">Calculating...</div>
-            <p id="timeRemaining" class="text-gray-600">--:--:--</p>
-        </section>
-
-        <section class="bg-white p-6 rounded-xl shadow-sm">
-            <h2 class="text-xl font-bold mb-4 border-b pb-2">Weight Tracker</h2>
-            
-            <div class="flex items-center justify-between mb-4">
-                <label class="font-medium text-gray-700">Current Weight (kg):</label>
-                <input type="number" id="currentWeight" placeholder="e.g. 75" oninput="saveData(); updateProjection();" 
-                       class="w-24 p-2 border rounded-md text-center focus:outline-none focus:ring-2 focus:ring-green-500">
+    <div id="app-container" class="w-full h-full sm:max-w-md sm:h-[850px] sm:max-h-[95vh] bg-slate-50 sm:rounded-[2.5rem] shadow-2xl relative overflow-hidden flex flex-col sm:border-[8px] border-slate-800">
+        
+        <header class="pt-14 pb-4 px-6 bg-white shrink-0 shadow-sm z-10 flex justify-between items-center rounded-b-3xl">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight text-slate-900">Lumina Fast</h1>
+                <p class="text-sm text-slate-500 font-medium" id="current-date">Today</p>
             </div>
+            <button onclick="openSettings()" class="p-2 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+                <i data-lucide="user"></i>
+            </button>
+        </header>
 
-            <div class="bg-green-50 p-4 rounded-lg">
-                <p class="text-sm text-green-800 font-medium mb-1">Goal in 1 Month (Aggressive):</p>
-                <p class="text-2xl font-bold text-green-600" id="projectedWeight">-- kg</p>
-                <p class="text-xs text-green-700 mt-2">*Based on an aggressive 1kg/week loss target (approx 4kg total drop).</p>
-            </div>
-        </section>
-
-        <section class="bg-white p-6 rounded-xl shadow-sm">
-            <h2 class="text-xl font-bold mb-4 border-b pb-2">Filipino Meal Schedule</h2>
+        <main class="flex-1 overflow-y-auto pb-24 relative">
             
-            <ul class="space-y-4">
-                <li class="flex items-start">
-                    <span class="font-bold text-green-600 w-20 shrink-0">8:00 AM</span>
-                    <div>
-                        <p class="font-semibold">Hydration Window</p>
-                        <p class="text-sm text-gray-600">Black coffee (no sugar/milk) or water.</p>
+            <section class="p-6 flex flex-col items-center justify-center relative mt-4">
+                <div class="relative w-64 h-64 flex items-center justify-center">
+                    <svg class="absolute top-0 left-0 w-full h-full" width="256" height="256">
+                        <circle class="text-slate-200" stroke-width="12" stroke="currentColor" fill="transparent" r="116" cx="128" cy="128" />
+                        <circle id="progress-ring" class="text-fasting progress-ring__circle" stroke-width="12" stroke-linecap="round" stroke="currentColor" fill="transparent" r="116" cx="128" cy="128" />
+                    </svg>
+                    
+                    <div class="text-center z-10 flex flex-col items-center">
+                        <span id="phase-icon" class="mb-2 text-fasting">
+                            <i data-lucide="moon" size="32"></i>
+                        </span>
+                        <h2 id="timer-display" class="text-4xl font-bold tabular-nums tracking-tight">00:00:00</h2>
+                        <p id="phase-label" class="text-sm font-medium text-slate-500 uppercase tracking-wider mt-1">Fasting</p>
+                        <p id="time-range-label" class="text-xs text-slate-400 mt-2 font-medium">8:00 PM - 12:00 PM</p>
                     </div>
-                </li>
-                <li class="flex items-start">
-                    <span class="font-bold text-green-600 w-20 shrink-0">12:00 PM</span>
-                    <div>
-                        <p class="font-semibold">First Meal (Break Fast)</p>
-                        <p class="text-sm text-gray-600">Ginisang Munggo with malunggay & 1 cup rice.</p>
-                    </div>
-                </li>
-                <li class="flex items-start">
-                    <span class="font-bold text-green-600 w-20 shrink-0">4:00 PM</span>
-                    <div>
-                        <p class="font-semibold">Afternoon Snack</p>
-                        <p class="text-sm text-gray-600">2 pieces boiled Saba banana.</p>
-                    </div>
-                </li>
-                <li class="flex items-start">
-                    <span class="font-bold text-green-600 w-20 shrink-0">7:30 PM</span>
-                    <div>
-                        <p class="font-semibold">Last Meal</p>
-                        <p class="text-sm text-gray-600">Chicken Tinola loaded with Kangkong & 1 cup rice.</p>
-                    </div>
-                </li>
-                <li class="flex items-start pt-2 border-t border-dashed">
-                    <span class="font-bold text-red-500 w-20 shrink-0">8:00 PM</span>
-                    <div>
-                        <p class="font-semibold text-red-500">Fasting Begins</p>
-                        <p class="text-sm text-gray-500">Water only until 12:00 PM tomorrow.</p>
-                    </div>
-                </li>
-            </ul>
-        </section>
+                </div>
+            </section>
 
-        <section class="bg-white p-6 rounded-xl shadow-sm">
-            <h2 class="text-xl font-bold mb-4 border-b pb-2">Settings</h2>
-            
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="font-medium">Phone Notifications</p>
-                    <p class="text-xs text-gray-500">Get alerted for meal times.</p>
+            <section class="px-6 mb-6">
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-semibold text-slate-800 flex items-center gap-2">
+                            <i data-lucide="scale" size="18" class="text-brand-500"></i>
+                            Weight Tracker
+                        </h3>
+                        <button onclick="openSettings()" class="text-xs text-brand-600 font-medium bg-brand-50 px-2 py-1 rounded-md">Update</button>
+                    </div>
+                    
+                    <div class="flex justify-between items-end gap-4">
+                        <div class="flex-1 bg-slate-50 rounded-xl p-3 text-center">
+                            <p class="text-xs text-slate-500 mb-1">Current</p>
+                            <p class="text-xl font-bold text-slate-800"><span id="display-current-weight">0</span><span class="text-sm font-normal text-slate-500">kg</span></p>
+                        </div>
+                        <div class="flex-1 bg-brand-50 rounded-xl p-3 text-center relative overflow-hidden">
+                            <div class="absolute -right-2 -top-2 text-brand-100 opacity-50">
+                                <i data-lucide="trending-down" size="48"></i>
+                            </div>
+                            <p class="text-xs text-brand-600 mb-1 font-medium relative z-10">Proj. in 1 Month</p>
+                            <p class="text-xl font-bold text-brand-700 relative z-10"><span id="display-projected-weight">0</span><span class="text-sm font-normal text-brand-600/70">kg</span></p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-3 text-center">Based on an aggressive 1kg/week loss on 16:8 plan.</p>
+                </div>
+            </section>
+
+            <section class="px-6 pb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-semibold text-slate-800">Today's Meal Plan</h3>
+                    <span class="text-xs font-medium px-2 py-1 bg-amber-100 text-amber-700 rounded-md">12PM - 8PM Eating</span>
                 </div>
                 
-                <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
-                    <input type="checkbox" name="toggle" id="notifyToggle" onchange="toggleNotifications()" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
-                    <label for="toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
-                </div>
-            </div>
-        </section>
+                <div id="schedule-container" class="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
+                    </div>
+            </section>
+        </main>
 
-    </main>
+        <button onclick="testNotification()" class="absolute bottom-8 right-6 w-12 h-12 bg-slate-800 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-slate-700 transition-transform active:scale-95 z-20" title="Test Notification">
+            <i data-lucide="bell-ring" size="20"></i>
+        </button>
+
+        <div id="notification-overlay" class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-40 hidden flex items-end justify-center pb-8 px-4">
+            <div id="notification-card" class="bg-white w-full rounded-3xl p-6 shadow-2xl transform translate-y-full flex flex-col gap-4 border border-slate-100">
+                <div class="w-12 h-1 bg-slate-200 rounded-full mx-auto -mt-2 mb-2"></div>
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-2xl bg-brand-100 flex items-center justify-center text-2xl" id="notif-icon">
+                        🥗
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-xs font-bold text-brand-600 uppercase tracking-wide mb-1">Time to Eat!</h4>
+                        <h3 class="text-lg font-bold text-slate-900 leading-tight" id="notif-title">Lunch Break</h3>
+                    </div>
+                    <span class="text-sm font-bold bg-slate-100 text-slate-600 px-3 py-1 rounded-lg" id="notif-time">12:00 PM</span>
+                </div>
+                
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                    <p class="text-sm text-slate-600 font-medium mb-2">Recommended Intake:</p>
+                    <p class="text-sm text-slate-800" id="notif-desc">Description goes here.</p>
+                </div>
+                
+                <button onclick="closeNotification()" class="w-full py-3.5 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition active:scale-[0.98]">
+                    Got it, thanks!
+                </button>
+            </div>
+        </div>
+
+        <div id="settings-modal" class="absolute inset-0 bg-white z-50 hidden flex-col">
+            <header class="pt-14 pb-4 px-6 flex items-center gap-4 border-b border-slate-100">
+                <button onclick="closeSettings()" class="p-2 -ml-2 rounded-full hover:bg-slate-100 text-slate-600">
+                    <i data-lucide="arrow-left"></i>
+                </button>
+                <h2 class="text-xl font-bold text-slate-900">Your Profile</h2>
+            </header>
+            <div class="p-6 flex-1 space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Current Weight (kg)</label>
+                    <input type="number" id="input-weight" class="w-full text-lg p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition" placeholder="e.g., 75">
+                </div>
+
+                <button onclick="requestPhoneNotifications()" id="btn-notifications" class="w-full py-4 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition flex justify-center items-center gap-2">
+                    <i data-lucide="bell"></i> Enable Phone Notifications
+                </button>
+                <p class="text-xs text-slate-500 text-center -mt-4">Requires iOS 16.4+ and adding to Home Screen.</p>
+
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                    <h4 class="text-sm font-semibold text-blue-800 mb-1 flex items-center gap-2">
+                        <i data-lucide="info" size="16"></i> Plan Info
+                    </h4>
+                    <p class="text-sm text-blue-700">Currently set to the standard 16:8 plan.<br>Fast: 8:00 PM - 12:00 PM<br>Eat: 12:00 PM - 8:00 PM</p>
+                </div>
+                <button onclick="saveSettings()" class="w-full py-4 bg-brand-600 text-white rounded-xl font-semibold hover:bg-brand-700 transition shadow-lg shadow-brand-500/30 active:scale-[0.98]">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        let notificationsEnabled = false;
-        let lastNotifiedHour = -1;
+        // Initialize Icons
+        lucide.createIcons();
 
-        // --- LOCAL STORAGE FUNCTIONS --- //
+        // --- Application State ---
+        let state = {
+            currentWeight: 75,
+            plan: {
+                fastStartHour: 20, // 8 PM
+                fastEndHour: 12,   // 12 PM (Noon next day)
+            },
+            schedule: [
+                {
+                    id: 'hydration1',
+                    hour: 8, minute: 0,
+                    label: 'Morning Hydration',
+                    desc: 'Drink a large glass of water or black coffee (no sugar or milk). This keeps you hydrated and helps curb hunger during your fast.',
+                    icon: '☕',
+                    notified: false
+                },
+                { 
+                    id: 'meal1', 
+                    hour: 12, minute: 0, 
+                    label: 'First Meal (Break Fast)', 
+                    desc: 'Ginisang munggo (mung beans) with malunggay leaves and 1-2 boiled eggs. High protein, fiber-rich, and very affordable to gently break your fast.', 
+                    icon: '🍲',
+                    notified: false 
+                },
+                { 
+                    id: 'meal2', 
+                    hour: 15, minute: 30, 
+                    label: 'Afternoon Snack', 
+                    desc: 'Boiled saba (plantain banana) or a handful of local roasted peanuts (adobong mani). Provides cheap, sustained energy and potassium.', 
+                    icon: '🍌',
+                    notified: false 
+                },
+                { 
+                    id: 'meal3', 
+                    hour: 19, minute: 30, 
+                    label: 'Last Meal', 
+                    desc: 'Grilled chicken breast or local fish (tilapia/bangus) with stir-fried kangkong (water spinach) and ½ cup brown rice or kamote (sweet potato).', 
+                    icon: '🐟',
+                    notified: false 
+                }
+            ],
+            currentPhase: 'fasting' // 'fasting' or 'eating'
+        };
 
-        // 1. Function to save your data
+        // --- DOM Elements ---
+        const ui = {
+            date: document.getElementById('current-date'),
+            timerDisplay: document.getElementById('timer-display'),
+            phaseLabel: document.getElementById('phase-label'),
+            phaseIcon: document.getElementById('phase-icon'),
+            timeRangeLabel: document.getElementById('time-range-label'),
+            progressRing: document.getElementById('progress-ring'),
+            
+            dispCurrentWeight: document.getElementById('display-current-weight'),
+            dispProjectedWeight: document.getElementById('display-projected-weight'),
+            
+            scheduleContainer: document.getElementById('schedule-container'),
+            
+            notifOverlay: document.getElementById('notification-overlay'),
+            notifCard: document.getElementById('notification-card'),
+            notifIcon: document.getElementById('notif-icon'),
+            notifTitle: document.getElementById('notif-title'),
+            notifTime: document.getElementById('notif-time'),
+            notifDesc: document.getElementById('notif-desc'),
+
+            settingsModal: document.getElementById('settings-modal'),
+            inputWeight: document.getElementById('input-weight')
+        };
+
+        // --- Local Storage Functions ---
         function saveData() {
-            const appData = {
-                currentWeight: document.getElementById('currentWeight').value,
-                notificationsEnabled: notificationsEnabled 
-            };
-            localStorage.setItem('luminaFastData', JSON.stringify(appData));
+            localStorage.setItem('luminaFastData', JSON.stringify({ currentWeight: state.currentWeight }));
         }
 
-        // 2. Function to load your data
         function loadData() {
             const savedString = localStorage.getItem('luminaFastData');
-            
             if (savedString) {
-                const appData = JSON.parse(savedString);
-                
-                if (appData.currentWeight) {
-                    document.getElementById('currentWeight').value = appData.currentWeight;
-                    updateProjection(); 
-                }
-                
-                if (appData.notificationsEnabled !== undefined) {
-                    notificationsEnabled = appData.notificationsEnabled;
-                    document.getElementById('notifyToggle').checked = notificationsEnabled;
-                }
-            }
-        }
-
-        // --- APP FEATURES LOGIC --- //
-
-        function updateProjection() {
-            const current = parseFloat(document.getElementById('currentWeight').value);
-            const projectionElement = document.getElementById('projectedWeight');
-            
-            if (!isNaN(current) && current > 0) {
-                const projected = current - 4.0;
-                projectionElement.innerText = projected.toFixed(1) + " kg";
-            } else {
-                projectionElement.innerText = "-- kg";
-            }
-        }
-
-        function toggleNotifications() {
-            const toggle = document.getElementById('notifyToggle').checked;
-            
-            if (toggle) {
-                if (!("Notification" in window)) {
-                    alert("This browser does not support desktop notification");
-                    document.getElementById('notifyToggle').checked = false;
-                    return;
-                }
-                Notification.requestPermission().then(function (permission) {
-                    if (permission === "granted") {
-                        notificationsEnabled = true;
-                        new Notification("Lumina Fast", { body: "Notifications are now active!" });
-                    } else {
-                        notificationsEnabled = false;
-                        document.getElementById('notifyToggle').checked = false;
+                try {
+                    const appData = JSON.parse(savedString);
+                    if (appData.currentWeight) {
+                        state.currentWeight = appData.currentWeight;
                     }
-                    saveData(); 
-                });
-            } else {
-                notificationsEnabled = false;
-                saveData(); 
-            }
-        }
-
-        function sendNotification(title, body) {
-            if (notificationsEnabled && Notification.permission === "granted") {
-                new Notification(title, { body: body, icon: "https://via.placeholder.com/192/000000/FFFFFF/?text=LF" });
-            }
-        }
-
-        function checkSchedule() {
-            const now = new Date();
-            const hour = now.getHours();
-            const minute = now.getMinutes();
-
-            const statusDisplay = document.getElementById('statusDisplay');
-            if (hour >= 20 || hour < 12) {
-                statusDisplay.innerText = "Fasting Window";
-                statusDisplay.className = "text-3xl font-bold text-red-500 mb-2";
-            } else {
-                statusDisplay.innerText = "Eating Window";
-                statusDisplay.className = "text-3xl font-bold text-green-600 mb-2";
-            }
-
-            if (minute === 0 && hour !== lastNotifiedHour) {
-                if (hour === 8) {
-                    sendNotification("Hydration Time!", "Drink your black coffee or water.");
-                } else if (hour === 12) {
-                    sendNotification("Break Your Fast!", "Time for Munggo and Rice.");
-                } else if (hour === 16) {
-                    sendNotification("Snack Time!", "Time for your boiled Saba.");
-                } else if (hour === 19) {
-                    sendNotification("Last Meal Warning!", "Time for Chicken Tinola. Fasting starts in 30 minutes.");
-                } else if (hour === 20) {
-                    sendNotification("Fasting Begins", "Stop eating. Water only until tomorrow noon.");
+                } catch (e) {
+                    console.error("Error parsing local storage", e);
                 }
-                lastNotifiedHour = hour;
             }
         }
 
-        window.onload = function() {
-            loadData(); 
-            checkSchedule(); 
-            setInterval(checkSchedule, 10000); 
-        };
+        // Setup Progress Ring math
+        const radius = ui.progressRing.r.baseVal.value;
+        const circumference = radius * 2 * Math.PI;
+        ui.progressRing.style.strokeDasharray = `${circumference} ${circumference}`;
+        ui.progressRing.style.strokeDashoffset = circumference;
+
+        function setProgress(percent) {
+            const offset = circumference - percent / 100 * circumference;
+            ui.progressRing.style.strokeDashoffset = offset;
+        }
+
+        // --- Initialization ---
+        function initApp() {
+            // Set Date
+            const options = { weekday: 'long', month: 'short', day: 'numeric' };
+            ui.date.textContent = new Date().toLocaleDateString('en-US', options);
+
+            loadData(); // Load saved data on startup
+
+            updateWeightUI();
+            renderSchedule();
+            
+            // Start Timers
+            updateTimerLogic(); 
+            setInterval(updateTimerLogic, 1000); 
+            
+            // Check notifications
+            setInterval(checkNotifications, 10000);
+        }
+
+        // --- Logic Functions ---
+        function updateWeightUI() {
+            ui.dispCurrentWeight.textContent = state.currentWeight;
+            // Calculation: Aggressive weight loss is 1kg per week. 4 weeks in a month = 4kg.
+            const projected = Math.max(0, state.currentWeight - 4); 
+            ui.dispProjectedWeight.textContent = projected.toFixed(1);
+            ui.inputWeight.value = state.currentWeight;
+        }
+
+        function updateTimerLogic() {
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMin = now.getMinutes();
+            const currentSec = now.getSeconds();
+            
+            const timeInSeconds = currentHour * 3600 + currentMin * 60 + currentSec;
+            const fastStartSec = state.plan.fastStartHour * 3600;
+            const eatStartSec = state.plan.fastEndHour * 3600;
+
+            let isFasting = false;
+            let targetTimeSec = 0;
+            let totalWindowSec = 0;
+            let elapsedSec = 0;
+
+            if (currentHour >= state.plan.fastStartHour || currentHour < state.plan.fastEndHour) {
+                isFasting = true;
+                targetTimeSec = eatStartSec;
+                if (currentHour >= state.plan.fastStartHour) targetTimeSec += 24 * 3600;
+                totalWindowSec = 16 * 3600; 
+                
+                if(currentHour >= state.plan.fastStartHour) {
+                    elapsedSec = timeInSeconds - fastStartSec;
+                } else {
+                    elapsedSec = timeInSeconds + (24*3600 - fastStartSec);
+                }
+            } else {
+                isFasting = false;
+                targetTimeSec = fastStartSec;
+                totalWindowSec = 8 * 3600; 
+                elapsedSec = timeInSeconds - eatStartSec;
+            }
+
+            let remainingSec = targetTimeSec - (currentHour >= state.plan.fastStartHour && targetTimeSec > 24*3600 ? timeInSeconds : timeInSeconds);
+            if(remainingSec < 0) remainingSec += 24*3600; 
+
+            const h = Math.floor(remainingSec / 3600).toString().padStart(2, '0');
+            const m = Math.floor((remainingSec % 3600) / 60).toString().padStart(2, '0');
+            const s = Math.floor(remainingSec % 60).toString().padStart(2, '0');
+            
+            ui.timerDisplay.textContent = `${h}:${m}:${s}`;
+
+            if (isFasting !== (state.currentPhase === 'fasting')) {
+                state.currentPhase = isFasting ? 'fasting' : 'eating';
+                updatePhaseUI(isFasting);
+            }
+
+            const progressPercent = (elapsedSec / totalWindowSec) * 100;
+            setProgress(Math.min(100, Math.max(0, progressPercent)));
+        }
+
+        function updatePhaseUI(isFasting) {
+            if (isFasting) {
+                ui.phaseLabel.textContent = "Time to Eat in";
+                ui.timeRangeLabel.textContent = "Fasting Window (8 PM - 12 PM)";
+                ui.phaseIcon.innerHTML = '<i data-lucide="moon" size="32"></i>';
+                ui.phaseIcon.className = 'mb-2 text-fasting';
+                ui.progressRing.classList.remove('text-eating');
+                ui.progressRing.classList.add('text-fasting');
+            } else {
+                ui.phaseLabel.textContent = "Fasting Starts in";
+                ui.timeRangeLabel.textContent = "Eating Window (12 PM - 8 PM)";
+                ui.phaseIcon.innerHTML = '<i data-lucide="sun" size="32"></i>';
+                ui.phaseIcon.className = 'mb-2 text-eating';
+                ui.progressRing.classList.remove('text-fasting');
+                ui.progressRing.classList.add('text-eating');
+                
+                state.schedule.forEach(meal => meal.notified = false);
+            }
+            lucide.createIcons();
+        }
+
+        function renderSchedule() {
+            ui.scheduleContainer.innerHTML = '';
+            
+            state.schedule.forEach((meal, index) => {
+                const timeStr = formatAmPm(meal.hour, meal.minute);
+                const itemHtml = `
+                    <div class="relative flex items-start gap-4">
+                        <div class="absolute left-0 mt-1.5 -ml-1.5 w-3 h-3 bg-brand-500 rounded-full border-2 border-white shadow-sm z-10 md:left-1/2 md:-ml-1.5 md:hidden"></div>
+                        <div class="w-12 pt-1 text-right shrink-0">
+                            <span class="text-xs font-bold text-slate-500">${timeStr}</span>
+                        </div>
+                        <div class="flex-1 bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex gap-4 items-start z-10 hover:shadow-md transition">
+                            <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-2xl shrink-0 border border-slate-100">
+                                ${meal.icon}
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-sm">${meal.label}</h4>
+                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">${meal.desc}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                ui.scheduleContainer.insertAdjacentHTML('beforeend', itemHtml);
+            });
+        }
+
+        function formatAmPm(hour, minute) {
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const h = hour % 12 || 12;
+            const m = minute.toString().padStart(2, '0');
+            return `${h}:${m} ${ampm}`;
+        }
+
+        function checkNotifications() {
+            const now = new Date();
+            const h = now.getHours();
+            const m = now.getMinutes();
+
+            state.schedule.forEach(meal => {
+                if (meal.hour === h && meal.minute === m && !meal.notified) {
+                    triggerNotification(meal);
+                    meal.notified = true;
+                }
+            });
+        }
+
+        function triggerNotification(meal) {
+            ui.notifIcon.textContent = meal.icon;
+            ui.notifTitle.textContent = meal.label;
+            ui.notifTime.textContent = formatAmPm(meal.hour, meal.minute);
+            ui.notifDesc.textContent = meal.desc;
+
+            ui.notifOverlay.classList.remove('hidden');
+            setTimeout(() => {
+                ui.notifCard.classList.remove('toast-exit');
+                ui.notifCard.classList.add('toast-enter');
+            }, 10);
+
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification("Lumina Fast: " + meal.label, {
+                    body: meal.desc,
+                    icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>' + meal.icon + '</text></svg>'
+                });
+            }
+        }
+
+        function closeNotification() {
+            ui.notifCard.classList.remove('toast-enter');
+            ui.notifCard.classList.add('toast-exit');
+            setTimeout(() => {
+                ui.notifOverlay.classList.add('hidden');
+            }, 400);
+        }
+
+        function testNotification() {
+            const randomMeal = state.schedule[Math.floor(Math.random() * state.schedule.length)];
+            triggerNotification(randomMeal);
+        }
+
+        // --- Settings Management ---
+        function openSettings() {
+            ui.settingsModal.classList.remove('hidden');
+            ui.settingsModal.classList.add('flex');
+            ui.inputWeight.value = state.currentWeight;
+            ui.inputWeight.focus();
+        }
+
+        function closeSettings() {
+            ui.settingsModal.classList.add('hidden');
+            ui.settingsModal.classList.remove('flex');
+        }
+
+        function saveSettings() {
+            const newWeight = parseFloat(ui.inputWeight.value);
+            if (!isNaN(newWeight) && newWeight > 0) {
+                state.currentWeight = newWeight;
+                saveData(); // Save the new weight to local storage
+                updateWeightUI();
+                closeSettings();
+                
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = "Saved!";
+                btn.classList.add('bg-green-600');
+                btn.classList.remove('bg-brand-600');
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.classList.remove('bg-green-600');
+                    btn.classList.add('bg-brand-600');
+                }, 1500);
+            }
+        }
+
+        function requestPhoneNotifications() {
+            if (!("Notification" in window)) {
+                alert("This browser does not support phone notifications.");
+                return;
+            }
+            
+            Notification.requestPermission().then(permission => {
+                const btn = document.getElementById('btn-notifications');
+                if (permission === "granted") {
+                    btn.innerHTML = '<i data-lucide="check-circle" class="text-green-500"></i> Notifications Enabled';
+                    btn.classList.add('bg-green-50');
+                    btn.classList.remove('bg-slate-100');
+                    lucide.createIcons();
+                } else {
+                    btn.innerHTML = '<i data-lucide="x-circle" class="text-red-500"></i> Permission Denied';
+                    lucide.createIcons();
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
 </html>
