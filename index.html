@@ -29,8 +29,8 @@
                             600: '#16a34a',
                             900: '#14532d',
                         },
-                        fasting: '#3b82f6', // Blue for fasting
-                        eating: '#f59e0b',  // Amber for eating
+                        fasting: '#3b82f6', 
+                        eating: '#f59e0b',  
                     }
                 }
             }
@@ -40,9 +40,7 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f8fafc;
-            /* Mobile app feel */
             -webkit-tap-highlight-color: transparent;
-            /* Prevent pull-to-refresh on mobile */
             overscroll-behavior-y: contain; 
         }
         
@@ -52,14 +50,12 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        /* Circular Progress Bar Styles */
         .progress-ring__circle {
             transition: stroke-dashoffset 0.35s;
             transform: rotate(-90deg);
             transform-origin: 50% 50%;
         }
 
-        /* Toast Animation */
         @keyframes slideInUp {
             from { transform: translateY(100%); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
@@ -76,7 +72,6 @@
             animation: slideOutDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        /* Hide scrollbar for clean app look */
         ::-webkit-scrollbar {
             display: none;
         }
@@ -215,54 +210,73 @@
     </div>
 
     <script>
-        // Initialize Icons
         lucide.createIcons();
 
-        // --- Application State ---
+        let currentDayTracker = new Date().getDay();
+
+        // 7-Day Rotating Menu Plan
+        const weeklyMeals = [
+            // Sunday (0)
+            [
+                { id: 'sun_hyd', hour: 8, minute: 0, label: 'Morning Hydration', desc: 'Water or Black Coffee. No sugar.', icon: '☕', notified: false },
+                { id: 'sun_m1', hour: 12, minute: 0, label: 'First Meal', desc: 'Pork Adobo with Kangkong & 1 cup rice.', icon: '🍲', notified: false },
+                { id: 'sun_m2', hour: 15, minute: 30, label: 'Afternoon Snack', desc: '2 pieces of Banana Cue.', icon: '🍌', notified: false },
+                { id: 'sun_m3', hour: 19, minute: 30, label: 'Last Meal', desc: 'Sinigang na Bangus with plenty of veggies & 1 cup rice.', icon: '🐟', notified: false }
+            ],
+            // Monday (1)
+            [
+                { id: 'mon_hyd', hour: 8, minute: 0, label: 'Morning Hydration', desc: 'Water or Black Coffee. No sugar.', icon: '☕', notified: false },
+                { id: 'mon_m1', hour: 12, minute: 0, label: 'First Meal', desc: 'Ginisang Munggo with malunggay & 1 cup rice.', icon: '🍲', notified: false },
+                { id: 'mon_m2', hour: 15, minute: 30, label: 'Afternoon Snack', desc: 'Boiled saba or adobong mani.', icon: '🥜', notified: false },
+                { id: 'mon_m3', hour: 19, minute: 30, label: 'Last Meal', desc: 'Chicken Tinola with Kangkong & 1 cup rice.', icon: '🍗', notified: false }
+            ],
+            // Tuesday (2)
+            [
+                { id: 'tue_hyd', hour: 8, minute: 0, label: 'Morning Hydration', desc: 'Water or Black Coffee. No sugar.', icon: '☕', notified: false },
+                { id: 'tue_m1', hour: 12, minute: 0, label: 'First Meal', desc: 'Tortang Talong (Eggplant Omelet) & 1 cup rice.', icon: '🍳', notified: false },
+                { id: 'tue_m2', hour: 15, minute: 30, label: 'Afternoon Snack', desc: 'Boiled Kamote (Sweet Potato).', icon: '🍠', notified: false },
+                { id: 'tue_m3', hour: 19, minute: 30, label: 'Last Meal', desc: 'Paksiw na Galunggong & 1 cup rice.', icon: '🐟', notified: false }
+            ],
+            // Wednesday (3)
+            [
+                { id: 'wed_hyd', hour: 8, minute: 0, label: 'Morning Hydration', desc: 'Water or Black Coffee. No sugar.', icon: '☕', notified: false },
+                { id: 'wed_m1', hour: 12, minute: 0, label: 'First Meal', desc: 'Ginisang Sayote with ground pork & 1 cup rice.', icon: '🍲', notified: false },
+                { id: 'wed_m2', hour: 15, minute: 30, label: 'Afternoon Snack', desc: '2 slices of Puto or 1 Suman.', icon: '🍘', notified: false },
+                { id: 'wed_m3', hour: 19, minute: 30, label: 'Last Meal', desc: 'Chicken Adobo with boiled egg & 1 cup rice.', icon: '🍗', notified: false }
+            ],
+            // Thursday (4)
+            [
+                { id: 'thu_hyd', hour: 8, minute: 0, label: 'Morning Hydration', desc: 'Water or Black Coffee. No sugar.', icon: '☕', notified: false },
+                { id: 'thu_m1', hour: 12, minute: 0, label: 'First Meal', desc: 'Sardines with Misua, Patola & 1 cup rice.', icon: '🐟', notified: false },
+                { id: 'thu_m2', hour: 15, minute: 30, label: 'Afternoon Snack', desc: 'Fresh Lumpia (Lumpiang Sariwa).', icon: '🌯', notified: false },
+                { id: 'thu_m3', hour: 19, minute: 30, label: 'Last Meal', desc: 'Pinakbet (Mixed Veggies) with minimal pork & 1 cup rice.', icon: '🥦', notified: false }
+            ],
+            // Friday (5)
+            [
+                { id: 'fri_hyd', hour: 8, minute: 0, label: 'Morning Hydration', desc: 'Water or Black Coffee. No sugar.', icon: '☕', notified: false },
+                { id: 'fri_m1', hour: 12, minute: 0, label: 'First Meal', desc: 'Daing na Bangus with Tomato/Onion Salad & 1 cup rice.', icon: '🐟', notified: false },
+                { id: 'fri_m2', hour: 15, minute: 30, label: 'Afternoon Snack', desc: 'Taho (request for less arnibal/syrup).', icon: '🥤', notified: false },
+                { id: 'fri_m3', hour: 19, minute: 30, label: 'Last Meal', desc: 'Ginisang Ampalaya with egg & 1 cup rice.', icon: '🍳', notified: false }
+            ],
+            // Saturday (6)
+            [
+                { id: 'sat_hyd', hour: 8, minute: 0, label: 'Morning Hydration', desc: 'Water or Black Coffee. No sugar.', icon: '☕', notified: false },
+                { id: 'sat_m1', hour: 12, minute: 0, label: 'First Meal', desc: 'Chicken Arroz Caldo with boiled egg.', icon: '🥣', notified: false },
+                { id: 'sat_m2', hour: 15, minute: 30, label: 'Afternoon Snack', desc: '1 piece Turon.', icon: '🍌', notified: false },
+                { id: 'sat_m3', hour: 19, minute: 30, label: 'Last Meal', desc: 'Pork Bistek (onions, calamansi) & 1 cup rice.', icon: '🥩', notified: false }
+            ]
+        ];
+
         let state = {
             currentWeight: 75,
             plan: {
-                fastStartHour: 20, // 8 PM
-                fastEndHour: 12,   // 12 PM (Noon next day)
+                fastStartHour: 20, 
+                fastEndHour: 12,   
             },
-            schedule: [
-                {
-                    id: 'hydration1',
-                    hour: 8, minute: 0,
-                    label: 'Morning Hydration',
-                    desc: 'Drink a large glass of water or black coffee (no sugar or milk). This keeps you hydrated and helps curb hunger during your fast.',
-                    icon: '☕',
-                    notified: false
-                },
-                { 
-                    id: 'meal1', 
-                    hour: 12, minute: 0, 
-                    label: 'First Meal (Break Fast)', 
-                    desc: 'Ginisang munggo (mung beans) with malunggay leaves and 1-2 boiled eggs. High protein, fiber-rich, and very affordable to gently break your fast.', 
-                    icon: '🍲',
-                    notified: false 
-                },
-                { 
-                    id: 'meal2', 
-                    hour: 15, minute: 30, 
-                    label: 'Afternoon Snack', 
-                    desc: 'Boiled saba (plantain banana) or a handful of local roasted peanuts (adobong mani). Provides cheap, sustained energy and potassium.', 
-                    icon: '🍌',
-                    notified: false 
-                },
-                { 
-                    id: 'meal3', 
-                    hour: 19, minute: 30, 
-                    label: 'Last Meal', 
-                    desc: 'Grilled chicken breast or local fish (tilapia/bangus) with stir-fried kangkong (water spinach) and ½ cup brown rice or kamote (sweet potato).', 
-                    icon: '🐟',
-                    notified: false 
-                }
-            ],
-            currentPhase: 'fasting' // 'fasting' or 'eating'
+            schedule: [],
+            currentPhase: 'fasting' 
         };
 
-        // --- DOM Elements ---
         const ui = {
             date: document.getElementById('current-date'),
             timerDisplay: document.getElementById('timer-display'),
@@ -270,24 +284,19 @@
             phaseIcon: document.getElementById('phase-icon'),
             timeRangeLabel: document.getElementById('time-range-label'),
             progressRing: document.getElementById('progress-ring'),
-            
             dispCurrentWeight: document.getElementById('display-current-weight'),
             dispProjectedWeight: document.getElementById('display-projected-weight'),
-            
             scheduleContainer: document.getElementById('schedule-container'),
-            
             notifOverlay: document.getElementById('notification-overlay'),
             notifCard: document.getElementById('notification-card'),
             notifIcon: document.getElementById('notif-icon'),
             notifTitle: document.getElementById('notif-title'),
             notifTime: document.getElementById('notif-time'),
             notifDesc: document.getElementById('notif-desc'),
-
             settingsModal: document.getElementById('settings-modal'),
             inputWeight: document.getElementById('input-weight')
         };
 
-        // --- Local Storage Functions ---
         function saveData() {
             localStorage.setItem('luminaFastData', JSON.stringify({ currentWeight: state.currentWeight }));
         }
@@ -306,7 +315,6 @@
             }
         }
 
-        // Setup Progress Ring math
         const radius = ui.progressRing.r.baseVal.value;
         const circumference = radius * 2 * Math.PI;
         ui.progressRing.style.strokeDasharray = `${circumference} ${circumference}`;
@@ -317,29 +325,29 @@
             ui.progressRing.style.strokeDashoffset = offset;
         }
 
-        // --- Initialization ---
+        function loadDailyMenu() {
+            const today = new Date().getDay();
+            // Clone the array so we don't permanently alter the template
+            state.schedule = JSON.parse(JSON.stringify(weeklyMeals[today]));
+            renderSchedule();
+        }
+
         function initApp() {
-            // Set Date
             const options = { weekday: 'long', month: 'short', day: 'numeric' };
             ui.date.textContent = new Date().toLocaleDateString('en-US', options);
 
-            loadData(); // Load saved data on startup
-
+            loadData(); 
+            loadDailyMenu();
             updateWeightUI();
-            renderSchedule();
             
-            // Start Timers
             updateTimerLogic(); 
             setInterval(updateTimerLogic, 1000); 
             
-            // Check notifications
             setInterval(checkNotifications, 10000);
         }
 
-        // --- Logic Functions ---
         function updateWeightUI() {
             ui.dispCurrentWeight.textContent = state.currentWeight;
-            // Calculation: Aggressive weight loss is 1kg per week. 4 weeks in a month = 4kg.
             const projected = Math.max(0, state.currentWeight - 4); 
             ui.dispProjectedWeight.textContent = projected.toFixed(1);
             ui.inputWeight.value = state.currentWeight;
@@ -350,6 +358,15 @@
             const currentHour = now.getHours();
             const currentMin = now.getMinutes();
             const currentSec = now.getSeconds();
+            const newDay = now.getDay();
+
+            // Refresh the menu automatically if the clock strikes midnight
+            if (newDay !== currentDayTracker) {
+                currentDayTracker = newDay;
+                const options = { weekday: 'long', month: 'short', day: 'numeric' };
+                ui.date.textContent = now.toLocaleDateString('en-US', options);
+                loadDailyMenu();
+            }
             
             const timeInSeconds = currentHour * 3600 + currentMin * 60 + currentSec;
             const fastStartSec = state.plan.fastStartHour * 3600;
@@ -411,8 +428,6 @@
                 ui.phaseIcon.className = 'mb-2 text-eating';
                 ui.progressRing.classList.remove('text-fasting');
                 ui.progressRing.classList.add('text-eating');
-                
-                state.schedule.forEach(meal => meal.notified = false);
             }
             lucide.createIcons();
         }
@@ -420,7 +435,7 @@
         function renderSchedule() {
             ui.scheduleContainer.innerHTML = '';
             
-            state.schedule.forEach((meal, index) => {
+            state.schedule.forEach((meal) => {
                 const timeStr = formatAmPm(meal.hour, meal.minute);
                 const itemHtml = `
                     <div class="relative flex items-start gap-4">
@@ -469,12 +484,19 @@
             ui.notifTime.textContent = formatAmPm(meal.hour, meal.minute);
             ui.notifDesc.textContent = meal.desc;
 
+            // Show internal popup
             ui.notifOverlay.classList.remove('hidden');
             setTimeout(() => {
                 ui.notifCard.classList.remove('toast-exit');
                 ui.notifCard.classList.add('toast-enter');
             }, 10);
 
+            // Vibrate phone if hardware allows it
+            if (navigator.vibrate) {
+                navigator.vibrate([200, 100, 200]);
+            }
+
+            // Push System Notification
             if ("Notification" in window && Notification.permission === "granted") {
                 new Notification("Lumina Fast: " + meal.label, {
                     body: meal.desc,
@@ -496,7 +518,6 @@
             triggerNotification(randomMeal);
         }
 
-        // --- Settings Management ---
         function openSettings() {
             ui.settingsModal.classList.remove('hidden');
             ui.settingsModal.classList.add('flex');
@@ -513,7 +534,7 @@
             const newWeight = parseFloat(ui.inputWeight.value);
             if (!isNaN(newWeight) && newWeight > 0) {
                 state.currentWeight = newWeight;
-                saveData(); // Save the new weight to local storage
+                saveData(); 
                 updateWeightUI();
                 closeSettings();
                 
