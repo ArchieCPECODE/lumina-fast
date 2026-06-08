@@ -126,7 +126,6 @@
                 currentWeight: document.getElementById('currentWeight').value,
                 notificationsEnabled: notificationsEnabled 
             };
-            // Convert the data to a text string and save it to localStorage
             localStorage.setItem('luminaFastData', JSON.stringify(appData));
         }
 
@@ -134,17 +133,14 @@
         function loadData() {
             const savedString = localStorage.getItem('luminaFastData');
             
-            // If there is saved data, apply it to the app
             if (savedString) {
                 const appData = JSON.parse(savedString);
                 
-                // Restore the weight input
                 if (appData.currentWeight) {
                     document.getElementById('currentWeight').value = appData.currentWeight;
-                    updateProjection(); // Update the math automatically
+                    updateProjection(); 
                 }
                 
-                // Restore the notification settings
                 if (appData.notificationsEnabled !== undefined) {
                     notificationsEnabled = appData.notificationsEnabled;
                     document.getElementById('notifyToggle').checked = notificationsEnabled;
@@ -159,7 +155,6 @@
             const projectionElement = document.getElementById('projectedWeight');
             
             if (!isNaN(current) && current > 0) {
-                // Aggressive 1kg/week = roughly 4kg a month
                 const projected = current - 4.0;
                 projectionElement.innerText = projected.toFixed(1) + " kg";
             } else {
@@ -184,11 +179,11 @@
                         notificationsEnabled = false;
                         document.getElementById('notifyToggle').checked = false;
                     }
-                    saveData(); // Save the new setting
+                    saveData(); 
                 });
             } else {
                 notificationsEnabled = false;
-                saveData(); // Save the new setting
+                saveData(); 
             }
         }
 
@@ -203,7 +198,6 @@
             const hour = now.getHours();
             const minute = now.getMinutes();
 
-            // Update Status Display (16:8 Fasting: 8PM to 12PM)
             const statusDisplay = document.getElementById('statusDisplay');
             if (hour >= 20 || hour < 12) {
                 statusDisplay.innerText = "Fasting Window";
@@ -213,7 +207,6 @@
                 statusDisplay.className = "text-3xl font-bold text-green-600 mb-2";
             }
 
-            // Notification Triggers (Trigger only once per hour at minute 0)
             if (minute === 0 && hour !== lastNotifiedHour) {
                 if (hour === 8) {
                     sendNotification("Hydration Time!", "Drink your black coffee or water.");
@@ -230,11 +223,10 @@
             }
         }
 
-        // 3. Trigger the load function the moment the app opens
         window.onload = function() {
-            loadData(); // Your requested load function
-            checkSchedule(); // Run immediately on load
-            setInterval(checkSchedule, 10000); // Check schedule every 10 seconds
+            loadData(); 
+            checkSchedule(); 
+            setInterval(checkSchedule, 10000); 
         };
     </script>
 </body>
