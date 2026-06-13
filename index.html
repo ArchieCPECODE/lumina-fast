@@ -97,6 +97,54 @@
                 </div>
             </section>
 
+            <section class="px-6 mb-6">
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-semibold text-slate-800 flex items-center gap-2">
+                            <i data-lucide="dumbbell" size="18" class="text-blue-500"></i>
+                            Daily Home Workout
+                        </h3>
+                        <span class="text-xs font-medium px-2 py-1 bg-blue-100 text-blue-700 rounded-md">15 Mins Total</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-4">A quick, zero-equipment routine perfect for taking a break from the computer screen. Do this once a day before your first meal.</p>
+                    
+                    <ul class="space-y-4">
+                        <li class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 text-xl">🏃‍♂️</div>
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-800">Jumping Jacks (Warm-up)</h4>
+                                <p class="text-xs text-slate-500"><span class="font-semibold text-slate-700">Duration:</span> 3 sets of 45 seconds.</p>
+                                <p class="text-xs text-slate-400 mt-0.5">Rest 15 seconds between sets.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 text-xl">🦵</div>
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-800">Bodyweight Squats</h4>
+                                <p class="text-xs text-slate-500"><span class="font-semibold text-slate-700">Reps:</span> 3 sets of 15 to 20 reps.</p>
+                                <p class="text-xs text-slate-400 mt-0.5">Keep your back straight. Rest 30s between sets.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 text-xl">💪</div>
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-800">Push-ups (or Knee Push-ups)</h4>
+                                <p class="text-xs text-slate-500"><span class="font-semibold text-slate-700">Reps:</span> 3 sets of 10 to 15 reps.</p>
+                                <p class="text-xs text-slate-400 mt-0.5">Great for counteracting desk-slouching. Rest 45s.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 text-xl">🧘‍♂️</div>
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-800">Core Plank</h4>
+                                <p class="text-xs text-slate-500"><span class="font-semibold text-slate-700">Duration:</span> 3 sets of 30 to 60 seconds.</p>
+                                <p class="text-xs text-slate-400 mt-0.5">Squeeze your core tightly. Rest 30s between planks.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
             <section class="px-6 pb-6">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-semibold text-slate-800">Today's Meal Plan</h3>
@@ -169,11 +217,9 @@
     <script>
         lucide.createIcons();
 
-        // Audio Context for the synthesized alarm beep
         let audioCtx;
         let alarmInterval;
         let wakeLock = null;
-
         let currentDayTracker = new Date().getDay();
 
         const weeklyMeals = [
@@ -287,7 +333,6 @@
             setInterval(updateTimerLogic, 1000); 
             setInterval(checkNotifications, 10000);
 
-            // Ask for native web notifications automatically
             if ("Notification" in window && Notification.permission === "default") {
                 Notification.requestPermission();
             }
@@ -401,7 +446,6 @@
             });
         }
 
-        // --- AUDIO ALARM LOGIC ---
         function playBeep() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -410,7 +454,7 @@
             const gainNode = audioCtx.createGain();
             
             oscillator.type = 'square';
-            oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // Beep pitch
+            oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); 
             oscillator.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.1);
             
             gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
@@ -430,7 +474,6 @@
             ui.notifTime.textContent = formatAmPm(meal.hour, meal.minute);
             ui.notifDesc.textContent = meal.desc;
 
-            // Start Audio Alarm (Beeps every 1 second until closed)
             playBeep();
             alarmInterval = setInterval(playBeep, 1000);
 
@@ -448,7 +491,7 @@
         }
 
         function stopAlarmAndClose() {
-            clearInterval(alarmInterval); // Stop the beeping
+            clearInterval(alarmInterval); 
             ui.notifCard.classList.remove('toast-enter');
             ui.notifCard.classList.add('toast-exit');
             setTimeout(() => { ui.notifOverlay.classList.add('hidden'); }, 400);
@@ -459,11 +502,9 @@
             triggerNotification(randomMeal);
         }
 
-        // --- CALENDAR EXPORT LOGIC ---
         function exportToCalendar() {
             let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Lumina Fast//EN\n";
             
-            // Generate a recurring daily alarm for each meal time
             const baseTimes = [
                 { id: "cal1", h: 8, m: 0, title: "Hydration Window", desc: "Drink black coffee or water." },
                 { id: "cal2", h: 12, m: 0, title: "Break Fast", desc: "Time for your first meal." },
@@ -477,20 +518,18 @@
             const dd = String(today.getDate()).padStart(2, '0');
 
             baseTimes.forEach(event => {
-                // Formatting for local time (no Z at the end)
                 const timeString = `${yyyy}${mm}${dd}T${String(event.h).padStart(2, '0')}${String(event.m).padStart(2, '0')}00`;
                 
                 icsContent += "BEGIN:VEVENT\n";
                 icsContent += `UID:${event.id}-${today.getTime()}@luminafast\n`;
                 icsContent += `DTSTAMP:${yyyy}${mm}${dd}T000000Z\n`;
                 icsContent += `DTSTART;TZID=Asia/Manila:${timeString}\n`;
-                icsContent += "RRULE:FREQ=DAILY\n"; // Repeats every day
+                icsContent += "RRULE:FREQ=DAILY\n"; 
                 icsContent += `SUMMARY:🥗 Lumina Fast: ${event.title}\n`;
                 icsContent += `DESCRIPTION:${event.desc}\n`;
                 
-                // Add native alarm trigger
                 icsContent += "BEGIN:VALARM\n";
-                icsContent += "TRIGGER:-PT0M\n"; // Alerts exactly on time
+                icsContent += "TRIGGER:-PT0M\n"; 
                 icsContent += "ACTION:DISPLAY\n";
                 icsContent += `DESCRIPTION:${event.title}\n`;
                 icsContent += "END:VALARM\n";
@@ -500,7 +539,6 @@
 
             icsContent += "END:VCALENDAR";
 
-            // Trigger file download
             const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
             const link = document.createElement('a');
             link.href = window.URL.createObjectURL(blob);
@@ -512,7 +550,6 @@
             alert("Calendar file generated! When prompted, tap 'Add All' to import the daily alarms into your iPhone.");
         }
 
-        // --- WAKE LOCK (DESK MODE) LOGIC ---
         async function toggleWakeLock() {
             const btn = document.getElementById('btn-wakelock');
             if (!wakeLock) {
@@ -540,7 +577,6 @@
             ui.settingsModal.classList.remove('hidden');
             ui.settingsModal.classList.add('flex');
             
-            // Audio requires user interaction to unlock. Tapping "Settings" does this silently.
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             } else if (audioCtx.state === 'suspended') {
